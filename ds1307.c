@@ -2,32 +2,28 @@
  *
  * @file    ds1307.c
  *
- * @brief   DS1307 interface library.
+ * @brief   DS1307 driver source file.
  *
  * @author  Theodore Ateba, tf.ateba@gmail.com
  *
- * @version 1.0
- *
  * @date    21 June 2015
- *
- * @update  26 July 2016
  *
  */
 
 /*===========================================================================*/
-/* Include Files                                                             */
+/* Include Files.                                                            */
 /*===========================================================================*/
 #include "ds1307.h"
 
 /*===========================================================================*/
-/* Global variables, I2C TX and RX buffers, I2C and Serial Configurations    */
+/* Global variables, I2C TX and RX buffers, I2C and Serial Configurations.   */
 /*===========================================================================*/
 extern BaseSequentialStream* chp;
 static uint8_t rxbuf[DS1307_RX_DEPTH];
 static uint8_t txbuf[DS1307_TX_DEPTH];
 static i2cflags_t errors = 0;
 
-// I2C interface 1
+/* I2C interface 1. */
 static const I2CConfig i2cConf = {
   OPMODE_I2C,
   400000,
@@ -35,36 +31,36 @@ static const I2CConfig i2cConf = {
 };
 
 /*===========================================================================*/
-/* Functions                                                                 */
+/* Functions.                                                                */
 /*===========================================================================*/
 
 /**
- * @fn    bcd2Dec
- * @brief Convert BCD to Decimal
+ * @brief   Convert BCD to Decimal.
  *
- * @param[in]	val Value to convert from BCD to Decimal
- * @return		    Converted decimal value
+ * @param[in]	val   value to convert from BCD to Decimal
+ * @return		      converted decimal value
  */
-uint8_t bcd2Dec(uint8_t val){
+uint8_t bcd2Dec(uint8_t val) {
+
   return ((val/16*10) + (val % 16));
 }
 
 /**
- * @fn    dec2Bcd
- * @brief Convert Decimal to BCD
+ * @brief   Convert Decimal to BCD.
  *
- * @param[in]	val Value to convert from Decimal to BCD
- * @return		    Converted BCD value
+ * @param[in]	val   value to convert from Decimal to BCD
+ * @return		      converted BCD value
  */
-uint8_t dec2Bcd(uint8_t val){
+uint8_t dec2Bcd(uint8_t val) {
+
   return ((val/10*16) + (val%10));
 }
 
 /**
- * @fn		ds1307InterfaceInit
- * @brief	Configure the I2C Interface 1 and start the Interface
+ * @brief	  Configure the I2C Interface 1 and start the Interface.
  */
-void ds1307InterfaceInit(void){
+void ds1307InterfaceInit(void) {
+
   i2cStart (&I2CD1, &i2cConf);
   palSetPadMode (GPIOB, 8, PAL_MODE_ALTERNATE(4) |
       PAL_STM32_OTYPE_OPENDRAIN ); // SCL
@@ -73,14 +69,13 @@ void ds1307InterfaceInit(void){
 }
 
 /**
- * @fn    ds1307SetDate
- * @brief Configuration of the RTC
+ * @brief   Configuration of the RTC.
  *
- * @param[in]	dsData  Pointer of data structure used to set the RTC
- * @return    msg     The result of the operation
+ * @param[in]	dsData  pointer of data structure used to set the RTC
+ * @return    msg     the result of the operation
  */
-msg_t ds1307SetDate(ds1307_t *dsData){
-  
+msg_t ds1307SetDate(ds1307_t *dsData) {
+
   txbuf[0] = DS1307_SECONDS_REG;
   txbuf[1] = dec2Bcd (dsData->seconds);
   txbuf[2] = dec2Bcd (dsData->minutes);
@@ -89,13 +84,13 @@ msg_t ds1307SetDate(ds1307_t *dsData){
   txbuf[5] = dec2Bcd (dsData->date);
   txbuf[6] = dec2Bcd (dsData->month);
   txbuf[7] = dec2Bcd (dsData->year - 2000);
-  
+
   i2cAcquireBus(&I2CD1);
   msg_t msg = i2cMasterTransmitTimeout(&I2CD1, DS1307_ADDRESS, txbuf, 
       DS1307_TX_DEPTH, NULL, 0, MS2ST(10));
   i2cReleaseBus (&I2CD1);
-  
-  if(msg != MSG_OK)
+
+  if (msg != MSG_OK)
     chprintf(chp, "\n\r Error when setting the DS1307 date over the I2C bus.");
   else
     chprintf(chp, "\n\r DS1307 was setting succefuly.");
@@ -104,37 +99,36 @@ msg_t ds1307SetDate(ds1307_t *dsData){
 }
 
 /**
- * @fn    ds1307Print
- * @brief Print the clock and date read from the DS1307 RTC
+ * @brief   Print the clock and date read from the DS1307 RTC.
  *
- * @param[in]	dsData Pointer to structure contening the data to print
+ * @param[in]	dsData  pointer to structure contening the data to print
  */
-void ds1307Print(ds1307_t *dsData){
+void ds1307Print(ds1307_t *dsData) {
+
   chprintf(chp, "\n\r RTC: Date is, %d / %d / %d %d:%d:%d", 
       dsData->date, dsData->month, dsData->year, 
       dsData->hours, dsData->minutes,dsData->seconds);
 }
 
 /**
- * @fn    ds1307GetDate
- * @brief Read data from RTC
+ * @brief   Read data from RTC.
  *
- * @param[out] dsData Pointer of data structure for the RTC reading
- * @return      msg   Result of the reading opration
+ * @param[out] dsData   pointer of data structure for the RTC reading
+ * @return      msg     result of the reading opration
  */
 msg_t ds1307GetDate(ds1307_t *dsData){
-  
-  txbuf[0] = DS1307_SECONDS_REG; // Register address of the Seconds
+
+  txbuf[0] = DS1307_SECONDS_REG; /* Register address of the Seconds. */
   i2cAcquireBus(&I2CD1);
   msg_t msg = i2cMasterTransmitTimeout (&I2CD1, DS1307_ADDRESS, txbuf, 1, 
       rxbuf, 7, MS2ST(10));
   i2cReleaseBus (&I2CD1);
-  
-  if (msg != MSG_OK){
+
+  if (msg != MSG_OK) {
     errors = i2cGetErrors (&I2CD1);
     chprintf(chp, "\n\r RTC: Get data error!, NOK");
   }
-  else{
+  else {
     dsData->seconds  = bcd2Dec (rxbuf[0] & 0x7F);
     dsData->minutes  = bcd2Dec (rxbuf[1]);
     dsData->hours    = bcd2Dec (rxbuf[2] & 0x3F);
@@ -145,3 +139,4 @@ msg_t ds1307GetDate(ds1307_t *dsData){
   }
   return msg;
 }
+

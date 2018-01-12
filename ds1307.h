@@ -2,23 +2,19 @@
  *
  * @file    ds1307.h
  *
- * @brief   ds1307 interface library header.
+ * @brief   ds1307 driver header file.
  *
  * @author  Theodore Ateba, tf.ateba@gmail.com
  *
- * @version 1.0
- *
  * @date    21 June 2015
- *
- * @update  26 July 2016
  *
  */
 
-#ifndef _DSLIB_H_
-#define _DSLIB_H_
+#ifndef DS1317_H
+#define DS1317_H
 
 /*===========================================================================*/
-/* Include Files                                                             */
+/* Include Files.                                                            */
 /*===========================================================================*/
 #include "ch.h"
 #include "hal.h"
@@ -26,11 +22,11 @@
 #include "chprintf.h"
 
 /*===========================================================================*/
-/* Driver data structures and types                                          */
+/* Driver data structures and types.                                         */
 /*===========================================================================*/
 
 /**
- * @note DS1307 data structure and type
+ * @brief   DS1307 data structure and type.
  */
 typedef struct {
 	uint8_t     seconds;
@@ -89,54 +85,11 @@ typedef struct {
 /* Functions.                                                                */
 /*===========================================================================*/
 
-/**
- * @fn    bcd2Dec
- * @brief Convert BCD to Decimal
- *
- * @param[in]	val Value to convert from BCD to Decimal
- * @return		    Converted Decimal value
- */
 uint8_t bcd2Dec(uint8_t val);
-
-/**
- * @fn    dec2Bcd
- * @brief Convert Decimal to BCD
- *
- * @param[in]	val Value to convert from Decimal to BCD
- * @return		    Converted BCD value
- */
 uint8_t dec2Bcd(uint8_t val);
-
-/**
- * @fn		ds1307InterfaceInit
- * @brief	Configure the I2C Interface 1 and start the Interface
- */
 void ds1307InterfaceInit(void);
-
-/**
- * @fn    ds1307SetDate
- * @brief Configuration of the RTC
- *
- * @param[in]	dsData  Pointer of data structure use to set the RTC
- * @return    msg     The result of the operation
- */
 msg_t ds1307SetDate(ds1307_t *dsData);
-
-/**
- * @fn    ds1307Print
- * @brief Print the clock and date read from the DS1307 RTC
- *
- * @param[in]	calendar Pointer of the structure contening the data to print
- */
 void ds1307Print(ds1307_t *dsData);
-
-/**
- * @fn    ds1307GetDate
- * @brief Read data from RTC
- *
- * @param[out]  dsData  Pointer of data structure for the RTC reading
- * @return      msg     Result of the reading operation
- */
 msg_t ds1307GetDate(ds1307_t *dsData);
 
-#endif // _DS1307_H_
+#endif /* DS1307_H */
